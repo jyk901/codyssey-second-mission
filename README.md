@@ -92,3 +92,16 @@ second-mission/
 - 실행 로그: [docs/run_logs.md](docs/run_logs.md)
 
 > 이 저장소는 `git clone` / `git pull` 실습을 거쳐 검증되었습니다.
+
+## 8. 실행 화면
+실제 프로그램 출력과 `git`/`python` 명령 결과를 터미널 스타일 이미지로 렌더링한 캡처입니다.
+(전체 텍스트 로그: [docs/run_logs.md](docs/run_logs.md))
+
+| 화면 | 파일 |
+|---|---|
+| 개발 환경(Python/Git/원격) | [docs/screenshots/env.png](docs/screenshots/env.png) |
+| 메뉴 | [docs/screenshots/menu.png](docs/screenshots/menu.png) |
+| 퀴즈 풀기 | [docs/screenshots/play.png](docs/screenshots/play.png) |
+| 퀴즈 추가/목록 | [docs/screenshots/add_quiz.png](docs/screenshots/add_quiz.png) |
+| 점수 확인(재시작 후 유지) | [docs/screenshots/score.png](docs/screenshots/score.png) |
+| `git log --oneline --graph` | [docs/screenshots/git_log.png](docs/screenshots/git_log.png) |
