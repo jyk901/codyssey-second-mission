@@ -59,7 +59,7 @@ second-mission/
 ├── inputs.py      # 입력 처리 함수 (read_int, read_answer, read_text, read_optional)
 ├── state.json     # 저장 데이터 (퀴즈 목록 + 최고 점수 + 게임 기록)
 ├── docs/
-│   └── run_logs.md  # 실행 화면 로그 (메뉴/풀기/추가/목록/점수/오류 입력/재시작)
+│   └── evidence.md  # 실행 증거 텍스트(환경/메뉴/풀기/추가/점수/삭제/git log/push)
 ├── .gitignore
 └── README.md
 ```
@@ -105,13 +105,13 @@ second-mission/
 - `feature/play-quiz` 브랜치에서 퀴즈 풀기를 구현한 뒤 `main` 으로 병합 (`checkout`, `merge`)
 - 보너스 기능도 `feature/bonus-*` 브랜치에서 구현한 뒤 `main` 으로 병합
 - 사용한 기본 명령어: `init`, `add`, `commit`, `push`, `pull`, `checkout`, `clone`
-- 실행 로그: [docs/run_logs.md](docs/run_logs.md)
+- 실행 로그: [docs/evidence.md](docs/evidence.md)
 
 > 이 저장소는 `git clone` / `git pull` 실습을 거쳐 검증되었습니다.
 
 ## 8. 실행 화면
 실제 프로그램 출력과 `git`/`python` 명령 결과를 터미널 스타일 이미지로 렌더링한 캡처입니다.
-(전체 텍스트 로그: [docs/run_logs.md](docs/run_logs.md))
+(전체 텍스트 로그: [docs/evidence.md](docs/evidence.md))
 
 | 화면 | 파일 |
 |---|---|
