@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 
+from inputs import read_int, read_text
 from quiz import CHOICE_COUNT, Quiz
 from quiz_data import create_default_quizzes
 
@@ -11,34 +12,6 @@ STATE_FILE = Path(__file__).resolve().parent / "state.json"
 LINE = "=" * 40
 MENU_MIN = 1
 MENU_MAX = 5
-
-
-def read_int(prompt, low, high):
-    """low~high 사이 정수를 입력받는다. 잘못된 입력이면 안내 후 재입력."""
-    while True:
-        raw = input(prompt).strip()
-        if raw == "":
-            print("⚠️ 입력이 비어 있습니다. 숫자를 입력하세요.")
-            continue
-        try:
-            number = int(raw)
-        except ValueError:
-            print(f"⚠️ 잘못된 입력입니다. {low}-{high} 사이의 숫자를 입력하세요.")
-            continue
-        if not low <= number <= high:
-            print(f"⚠️ 잘못된 입력입니다. {low}-{high} 사이의 숫자를 입력하세요.")
-            continue
-        return number
-
-
-def read_text(prompt):
-    """빈 문자열이 아닌 텍스트를 입력받는다. 빈 입력이면 안내 후 재입력."""
-    while True:
-        text = input(prompt).strip()
-        if text == "":
-            print("⚠️ 빈 입력입니다. 내용을 입력하세요.")
-            continue
-        return text
 
 
 class QuizGame:
