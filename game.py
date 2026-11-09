@@ -1,6 +1,7 @@
 """QuizGame: 메뉴 표시와 메뉴별 기능 연결을 담당한다."""
 import json
 import os
+import random
 from pathlib import Path
 
 from inputs import read_int, read_text
@@ -112,11 +113,15 @@ class QuizGame:
             print("⚠️ 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가하세요.")
             return
 
-        total = len(self.quizzes)
+        # 풀 문제 수 선택 (보너스) + 랜덤 출제 (보너스)
+        count = read_int(f"풀 문제 수 (1-{len(self.quizzes)}): ", 1, len(self.quizzes))
+        selected = random.sample(self.quizzes, count)  # 무작위로 섞어서 count개 선택
+
+        total = len(selected)
         print(f"\n📝 퀴즈를 시작합니다! (총 {total}문제)")
 
         correct = 0
-        for number, quiz in enumerate(self.quizzes, start=1):
+        for number, quiz in enumerate(selected, start=1):
             print("\n" + "-" * 40)
             quiz.display(number)
             print()
