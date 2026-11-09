@@ -1,5 +1,12 @@
 """QuizGame: 메뉴 표시와 메뉴별 기능 연결을 담당한다."""
+import json
+import os
+from pathlib import Path
+
+from quiz import Quiz
 from quiz_data import create_default_quizzes
+
+STATE_FILE = Path(__file__).resolve().parent / "state.json"
 
 LINE = "=" * 40
 MENU_MIN = 1
@@ -25,9 +32,72 @@ def read_int(prompt, low, high):
 
 
 class QuizGame:
-    def __init__(self):
+    def __init__(self, state_path=STATE_FILE):
         self.running = True
+        self.state_path = Path(state_path)
         self.quizzes = create_default_quizzes()
+        self.best_score = 0      # 최고 점수(100점 만점)
+        self.best_correct = 0    # 최고 점수를 낸 판의 정답 수
+        self.best_total = 0      # 최고 점수를 낸 판의 문제 수 (0이면 아직 안 푼 상태)
+        self.load_state()
+
+    # ---------- 파일 저장/불러오기 ----------
+    def load_state(self):
+        """state.json에서 퀴즈와 최고 점수를 불러온다.
+
+        파일이 없으면 기본 퀴즈를 쓰고, 손상되었으면 안내 후 기본값으로 복구한다.
+        """
+        if not self.state_path.exists():
+            print("🆕 저장된 데이터가 없어 기본 퀴즈로 시작합니다.")
+            self.save_state()
+            return
+
+        try:
+            with open(self.state_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+            quizzes = [Quiz.from_dict(item) for item in data["quizzes"]]
+            best_score = int(data.get("best_score", 0))
+            best_correct = int(data.get("best_correct", 0))
+            best_total = int(data.get("best_total", 0))
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            print("⚠️ 데이터 파일을 읽을 수 없거나 손상되어 기본 퀴즈로 복구합니다.")
+            self.backup_broken_file()
+            self.save_state()
+            return
+
+        self.quizzes = quizzes
+        self.best_score = best_score
+        self.best_correct = best_correct
+        self.best_total = best_total
+        print(f"📂 저장된 데이터를 불러왔습니다. "
+              f"(퀴즈 {len(self.quizzes)}개, 최고점수 {self.best_score}점)")
+
+    def backup_broken_file(self):
+        """손상된 파일은 지우지 않고 .corrupt 로 옮겨 둔다."""
+        try:
+            os.replace(self.state_path, str(self.state_path) + ".corrupt")
+        except OSError:
+            pass
+
+    def save_state(self):
+        """현재 퀴즈와 최고 점수를 state.json에 UTF-8로 저장한다. 성공 여부 반환."""
+        data = {
+            "quizzes": [quiz.to_dict() for quiz in self.quizzes],
+            "best_score": self.best_score,
+            "best_correct": self.best_correct,
+            "best_total": self.best_total,
+        }
+        temp_path = str(self.state_path) + ".tmp"
+        try:
+            with open(temp_path, "w", encoding="utf-8") as file:
+                json.dump(data, file, ensure_ascii=False, indent=4)
+            os.replace(temp_path, self.state_path)
+            return True
+        except OSError:
+            print("⚠️ 데이터 파일을 저장하지 못했습니다.")
+            return False
+
+    # ---------- 메뉴 ----------
 
     def show_menu(self):
         print(LINE)
@@ -101,6 +171,7 @@ class QuizGame:
         print("🚧 점수 확인은 준비 중입니다.")
 
     def quit(self):
+        self.save_state()
         print("👋 퀴즈 게임을 종료합니다.")
         self.running = False
 
@@ -112,4 +183,5 @@ class QuizGame:
                 self.handle_choice(choice)
                 print()
         except (KeyboardInterrupt, EOFError):
-            print("\n⚠️ 입력이 중단되었습니다. 안전하게 종료합니다.")
+            print("\n⚠️ 입력이 중단되었습니다. 저장 후 안전하게 종료합니다.")
+            self.save_state()
