@@ -4,7 +4,7 @@ import os
 import random
 from pathlib import Path
 
-from inputs import read_int, read_text
+from inputs import read_answer, read_int, read_optional, read_text
 from quiz import CHOICE_COUNT, Quiz
 from quiz_data import create_default_quizzes
 
@@ -13,6 +13,7 @@ STATE_FILE = Path(__file__).resolve().parent / "state.json"
 LINE = "=" * 40
 MENU_MIN = 1
 MENU_MAX = 5
+HINT_PENALTY = 0.5   # 힌트 1회당 차감되는 정답 수 (문제 배점의 절반)
 
 
 class QuizGame:
@@ -121,23 +122,50 @@ class QuizGame:
         print(f"\n📝 퀴즈를 시작합니다! (총 {total}문제)")
 
         correct = 0
+        hints_used = 0
         for number, quiz in enumerate(selected, start=1):
             print("\n" + "-" * 40)
             quiz.display(number)
             print()
-            user_answer = read_int("정답 입력: ", 1, len(quiz.choices))
+            user_answer, used = self.ask_answer(quiz)
+            hints_used += used
             if quiz.is_correct(user_answer):
                 print("✅ 정답입니다!")
                 correct += 1
             else:
                 print(f"❌ 오답입니다. 정답은 {quiz.answer}번입니다.")
 
-        self.show_result(correct, total)
+        self.show_result(correct, total, hints_used)
 
-    def show_result(self, correct, total):
-        score = round(correct / total * 100)
+    def ask_answer(self, quiz):
+        """정답을 입력받는다. 'h' 를 입력하면 힌트를 보여준다(점수 차감).
+
+        (정답 번호, 이번 문제에서 새로 사용한 힌트 수)를 반환한다.
+        """
+        used = 0
+        while True:
+            answer = read_answer("정답 입력 (힌트: h): ", 1, len(quiz.choices))
+            if answer != "h":
+                return answer, used
+            if not quiz.has_hint():
+                print("💡 이 문제에는 힌트가 없습니다.")
+            elif used:
+                print(f"💡 힌트: {quiz.hint} (이미 사용한 힌트입니다)")
+            else:
+                used = 1
+                print(f"💡 힌트: {quiz.hint}  (문제 배점의 절반이 차감됩니다)")
+
+    def calc_score(self, correct, total, hints_used):
+        """점수 = (정답 수 - 힌트 사용 수 x 0.5) / 문제 수 x 100, 최소 0점."""
+        effective = max(0, correct - hints_used * HINT_PENALTY)
+        return round(effective / total * 100)
+
+    def show_result(self, correct, total, hints_used=0):
+        score = self.calc_score(correct, total, hints_used)
         print("\n" + LINE)
         print(f"🏆 결과: {total}문제 중 {correct}문제 정답! ({score}점)")
+        if hints_used:
+            print(f"💡 힌트 {hints_used}회 사용으로 점수가 차감되었습니다.")
         if self.update_best_score(score, correct, total):
             print("🎉 새로운 최고 점수입니다!")
         print(LINE)
@@ -158,8 +186,9 @@ class QuizGame:
         question = read_text("문제를 입력하세요: ")
         choices = [read_text(f"선택지 {i}: ") for i in range(1, CHOICE_COUNT + 1)]
         answer = read_int(f"정답 번호 (1-{CHOICE_COUNT}): ", 1, CHOICE_COUNT)
+        hint = read_optional("힌트 (없으면 Enter): ")
 
-        self.quizzes.append(Quiz(question, choices, answer))
+        self.quizzes.append(Quiz(question, choices, answer, hint))
         if self.save_state():
             print("\n✅ 퀴즈가 추가되었습니다!")
 
