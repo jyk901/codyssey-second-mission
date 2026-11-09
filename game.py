@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 
-from quiz import Quiz
+from quiz import CHOICE_COUNT, Quiz
 from quiz_data import create_default_quizzes
 
 STATE_FILE = Path(__file__).resolve().parent / "state.json"
@@ -29,6 +29,16 @@ def read_int(prompt, low, high):
             print(f"⚠️ 잘못된 입력입니다. {low}-{high} 사이의 숫자를 입력하세요.")
             continue
         return number
+
+
+def read_text(prompt):
+    """빈 문자열이 아닌 텍스트를 입력받는다. 빈 입력이면 안내 후 재입력."""
+    while True:
+        text = input(prompt).strip()
+        if text == "":
+            print("⚠️ 빈 입력입니다. 내용을 입력하세요.")
+            continue
+        return text
 
 
 class QuizGame:
@@ -153,7 +163,15 @@ class QuizGame:
         print(LINE)
 
     def add_quiz(self):
-        print("🚧 퀴즈 추가는 준비 중입니다.")
+        """새 퀴즈를 입력받아 등록하고 파일에 저장한다."""
+        print("\n📌 새로운 퀴즈를 추가합니다.\n")
+        question = read_text("문제를 입력하세요: ")
+        choices = [read_text(f"선택지 {i}: ") for i in range(1, CHOICE_COUNT + 1)]
+        answer = read_int(f"정답 번호 (1-{CHOICE_COUNT}): ", 1, CHOICE_COUNT)
+
+        self.quizzes.append(Quiz(question, choices, answer))
+        if self.save_state():
+            print("\n✅ 퀴즈가 추가되었습니다!")
 
     def show_quiz_list(self):
         """저장된 퀴즈의 문제 목록을 보여준다."""
