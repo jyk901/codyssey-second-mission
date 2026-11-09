@@ -1,5 +1,6 @@
 """QuizGame: 메뉴 표시와 메뉴별 기능 연결을 담당한다."""
 import json
+from datetime import datetime
 import os
 import random
 from pathlib import Path
@@ -23,6 +24,7 @@ class QuizGame:
         self.quizzes = create_default_quizzes()
         self.best_score = 0      # 최고 점수(100점 만점)
         self.best_correct = 0    # 최고 점수를 낸 판의 정답 수
+        self.history = []        # 모든 게임 기록 (날짜/시간, 푼 문제 수, 정답 수, 점수)
         self.best_total = 0      # 최고 점수를 낸 판의 문제 수 (0이면 아직 안 푼 상태)
         self.load_state()
 
@@ -44,6 +46,7 @@ class QuizGame:
             best_score = int(data.get("best_score", 0))
             best_correct = int(data.get("best_correct", 0))
             best_total = int(data.get("best_total", 0))
+            history = self.parse_history(data.get("history", []))
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             print("⚠️ 데이터 파일을 읽을 수 없거나 손상되어 기본 퀴즈로 복구합니다.")
             self.backup_broken_file()
@@ -54,8 +57,22 @@ class QuizGame:
         self.best_score = best_score
         self.best_correct = best_correct
         self.best_total = best_total
+        self.history = history
         print(f"📂 저장된 데이터를 불러왔습니다. "
               f"(퀴즈 {len(self.quizzes)}개, 최고점수 {self.best_score}점)")
+
+    @staticmethod
+    def parse_history(raw):
+        """history 항목을 검증해 list로 반환한다. 형식이 틀리면 ValueError/TypeError."""
+        records = []
+        for item in raw:
+            records.append({
+                "played_at": str(item["played_at"]),
+                "solved": int(item["solved"]),
+                "correct": int(item["correct"]),
+                "score": int(item["score"]),
+            })
+        return records
 
     def backup_broken_file(self):
         """손상된 파일은 지우지 않고 .corrupt 로 옮겨 둔다."""
@@ -71,6 +88,7 @@ class QuizGame:
             "best_score": self.best_score,
             "best_correct": self.best_correct,
             "best_total": self.best_total,
+            "history": self.history,
         }
         temp_path = str(self.state_path) + ".tmp"
         try:
@@ -169,9 +187,20 @@ class QuizGame:
         print(f"🏆 결과: {total}문제 중 {correct}문제 정답! ({score}점)")
         if hints_used:
             print(f"💡 힌트 {hints_used}회 사용으로 점수가 차감되었습니다.")
+        self.record_history(correct, total, score)
         if self.update_best_score(score, correct, total):
             print("🎉 새로운 최고 점수입니다!")
         print(LINE)
+
+    def record_history(self, correct, total, score):
+        """이번 게임 기록(날짜/시간, 푼 문제 수, 점수)을 저장한다."""
+        self.history.append({
+            "played_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "solved": total,
+            "correct": correct,
+            "score": score,
+        })
+        self.save_state()
 
     def update_best_score(self, score, correct, total):
         """이번 점수가 최고 점수보다 높으면 갱신하고 파일에 저장한다."""
@@ -220,12 +249,24 @@ class QuizGame:
             print(f"\n🗑️ 퀴즈가 삭제되었습니다: {removed.question}")
 
     def show_score(self):
-        """최고 점수를 보여준다. 아직 풀지 않았다면 안내한다."""
+        """최고 점수와 전체 게임 기록을 보여준다. 아직 풀지 않았다면 안내한다."""
         if self.best_total == 0:
             print("⚠️ 아직 퀴즈를 풀지 않았습니다. 먼저 퀴즈를 풀어보세요!")
             return
         print(f"\n🏆 최고 점수: {self.best_score}점 "
               f"({self.best_total}문제 중 {self.best_correct}문제 정답)")
+        self.show_history()
+
+    def show_history(self):
+        """모든 게임 기록을 최신순으로 출력한다."""
+        if not self.history:
+            return
+        print(f"\n🕘 게임 기록 (총 {len(self.history)}회)")
+        print("-" * 40)
+        for record in reversed(self.history):
+            print(f"{record['played_at']} | {record['solved']}문제 중 "
+                  f"{record['correct']}정답 | {record['score']}점")
+        print("-" * 40)
 
     def quit(self):
         self.save_state()
