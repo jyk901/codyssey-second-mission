@@ -1,4 +1,5 @@
 """QuizGame: 메뉴 표시와 메뉴별 기능 연결을 담당한다."""
+from quiz_data import create_default_quizzes
 
 LINE = "=" * 40
 MENU_MIN = 1
@@ -26,6 +27,7 @@ def read_int(prompt, low, high):
 class QuizGame:
     def __init__(self):
         self.running = True
+        self.quizzes = create_default_quizzes()
 
     def show_menu(self):
         print(LINE)
@@ -52,7 +54,33 @@ class QuizGame:
 
     # 아래 기능들은 이후 커밋에서 하나씩 구현한다.
     def play_quiz(self):
-        print("🚧 퀴즈 풀기는 준비 중입니다.")
+        """저장된 퀴즈를 차례로 출제하고 정답/오답을 알려준 뒤 결과를 표시한다."""
+        if not self.quizzes:
+            print("⚠️ 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가하세요.")
+            return
+
+        total = len(self.quizzes)
+        print(f"\n📝 퀴즈를 시작합니다! (총 {total}문제)")
+
+        correct = 0
+        for number, quiz in enumerate(self.quizzes, start=1):
+            print("\n" + "-" * 40)
+            quiz.display(number)
+            print()
+            user_answer = read_int("정답 입력: ", 1, len(quiz.choices))
+            if quiz.is_correct(user_answer):
+                print("✅ 정답입니다!")
+                correct += 1
+            else:
+                print(f"❌ 오답입니다. 정답은 {quiz.answer}번입니다.")
+
+        self.show_result(correct, total)
+
+    def show_result(self, correct, total):
+        score = round(correct / total * 100)
+        print("\n" + LINE)
+        print(f"🏆 결과: {total}문제 중 {correct}문제 정답! ({score}점)")
+        print(LINE)
 
     def add_quiz(self):
         print("🚧 퀴즈 추가는 준비 중입니다.")
