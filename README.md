@@ -90,3 +90,5 @@ second-mission/
 - `feature/play-quiz` 브랜치에서 퀴즈 풀기를 구현한 뒤 `main` 으로 병합 (`checkout`, `merge`)
 - 사용한 기본 명령어: `init`, `add`, `commit`, `push`, `pull`, `checkout`, `clone`
 - 실행 로그: [docs/run_logs.md](docs/run_logs.md)
+
+> 이 저장소는 `git clone` / `git pull` 실습을 거쳐 검증되었습니다.
