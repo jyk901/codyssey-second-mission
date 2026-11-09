@@ -12,7 +12,7 @@ STATE_FILE = Path(__file__).resolve().parent / "state.json"
 
 LINE = "=" * 40
 MENU_MIN = 1
-MENU_MAX = 5
+MENU_MAX = 6
 HINT_PENALTY = 0.5   # 힌트 1회당 차감되는 정답 수 (문제 배점의 절반)
 
 
@@ -92,7 +92,8 @@ class QuizGame:
         print("2. 퀴즈 추가")
         print("3. 퀴즈 목록")
         print("4. 점수 확인")
-        print("5. 종료")
+        print("5. 퀴즈 삭제")
+        print("6. 종료")
         print(LINE)
 
     def handle_choice(self, choice):
@@ -105,6 +106,8 @@ class QuizGame:
         elif choice == 4:
             self.show_score()
         elif choice == 5:
+            self.delete_quiz()
+        elif choice == 6:
             self.quit()
 
     # 아래 기능들은 이후 커밋에서 하나씩 구현한다.
@@ -203,6 +206,18 @@ class QuizGame:
         for number, quiz in enumerate(self.quizzes, start=1):
             print(f"[{number}] {quiz.question}")
         print("-" * 40)
+
+    def delete_quiz(self):
+        """번호로 퀴즈를 골라 삭제하고 파일에 반영한다."""
+        if not self.quizzes:
+            print("⚠️ 삭제할 퀴즈가 없습니다.")
+            return
+
+        self.show_quiz_list()
+        number = read_int(f"삭제할 퀴즈 번호 (1-{len(self.quizzes)}): ", 1, len(self.quizzes))
+        removed = self.quizzes.pop(number - 1)
+        if self.save_state():
+            print(f"\n🗑️ 퀴즈가 삭제되었습니다: {removed.question}")
 
     def show_score(self):
         """최고 점수를 보여준다. 아직 풀지 않았다면 안내한다."""
